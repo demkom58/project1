@@ -89,9 +89,11 @@ public class Brain<TOwner> where TOwner : ILivingEntity
     public T? GetMemory<T>(MemoryModuleType<T> memoryModuleType)
     {
         var key = (MemoryModuleType<object>)(object)memoryModuleType;
-        // ReSharper disable once CanSimplifyDictionaryLookupWithTryGetValue
+
+        #pragma warning disable CA1854
         if (!_memories.ContainsKey(key))
             throw new InvalidOperationException("Unregistered memory fetched: " + memoryModuleType);
+        #pragma warning restore CA1854
 
         var stored = _memories[key];
         return stored.HasValue ? (T?)stored.Value.Value : default;
@@ -119,8 +121,10 @@ public class Brain<TOwner> where TOwner : ILivingEntity
     public bool CheckMemory<T>(MemoryModuleType<T> memoryModuleType, MemoryStatus memoryStatus)
     {
         var key = (MemoryModuleType<object>)(object)memoryModuleType;
-        // ReSharper disable once CanSimplifyDictionaryLookupWithTryGetValue
+
+        #pragma warning disable CA1854
         if (!_memories.ContainsKey(key)) return false;
+        #pragma warning restore CA1854
 
         var memory = _memories[key];
         return memoryStatus switch
@@ -150,11 +154,7 @@ public class Brain<TOwner> where TOwner : ILivingEntity
 
     public Activity? GetActiveNonCoreActivity()
     {
-        foreach (var activity in ActiveActivities)
-            if (!CoreActivities.Contains(activity))
-                return activity;
-
-        return null;
+        return ActiveActivities.FirstOrDefault(activity => !CoreActivities.Contains(activity));
     }
 
     public void SetActiveActivityIfPossible(Activity activity)
@@ -278,10 +278,9 @@ public class Brain<TOwner> where TOwner : ILivingEntity
     public Brain<TOwner> CopyWithoutBehaviors()
     {
         var brain = new Brain<TOwner>(_memories.Keys, _sensors.Keys, ImmutableList<MemoryValue<object>>.Empty);
-        foreach (var entry in _memories)
+        foreach (var (memoryModuleType, value) in _memories)
         {
-            var memoryModuleType = entry.Key;
-            if (entry.Value.HasValue) brain._memories[memoryModuleType] = entry.Value;
+            if (value.HasValue) brain._memories[memoryModuleType] = value;
         }
 
         return brain;
@@ -302,15 +301,12 @@ public class Brain<TOwner> where TOwner : ILivingEntity
 
     private void ForgetOutdatedMemories()
     {
-        foreach (var entry in _memories)
+        foreach (var (key, expirableValue) in _memories)
         {
-            var expirableValue = entry.Value;
             if (!expirableValue.HasValue) continue;
-
-            if (expirableValue.Value.IsExpired)
-                EraseMemory(entry.Key);
-            else
-                expirableValue.Value.Update();
+            
+            if (expirableValue.Value.IsExpired) EraseMemory(key);
+            else expirableValue.Value.Update();
         }
     }
 
@@ -354,7 +350,8 @@ public class Brain<TOwner> where TOwner : ILivingEntity
         return obj is ICollection { Count: 0 };
     }
 
-    private List<Tuple<int, Behavior<TOwner>>> CreatePriorityTuples(int priority,
+    private static List<Tuple<int, Behavior<TOwner>>> CreatePriorityTuples(
+        int priority, 
         IEnumerable<Behavior<TOwner>> behaviors)
     {
         var priorityCounter = priority;
