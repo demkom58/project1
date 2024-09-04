@@ -23,13 +23,13 @@ public class Sensors
     public static readonly TargetingConditions AttackTargetConditionsIgnoreInvisibilityAndLineOfSight =
         new() { IsCombat = true, Range = TargetingRange, TestInvisible = false, CheckLineOfSight = false };
     
-    public static readonly SensorType<DummySensor, ILivingEntity> Dummy =
-        new SensorType<DummySensor, ILivingEntity>("dummy", () => new DummySensor());
-    public static readonly SensorType<NearestItemSensor, ILivingEntity> NearestItems =
-        new SensorType<NearestItemSensor, ILivingEntity>("nearest_items", () => new NearestItemSensor());
-    public static readonly SensorType<NearestLivingEntitySensor<ILivingEntity>, ILivingEntity> NearestLivingEntities =
-        new SensorType<NearestLivingEntitySensor<ILivingEntity>, ILivingEntity>("nearest_living_entities",
-            () => new NearestLivingEntitySensor<ILivingEntity>());
-    public static readonly SensorType<PlayerSensor, ILivingEntity> NearestPlayers =
-        new SensorType<PlayerSensor, ILivingEntity>("nearest_players", () => new PlayerSensor());
+    // public static readonly SensorType<DummySensor, ILivingEntity> Dummy =
+    //     new SensorType<DummySensor, ILivingEntity>("dummy", () => new DummySensor());
+    // public static readonly SensorType<NearestItemSensor, ILivingEntity> NearestItems =
+    //     new SensorType<NearestItemSensor, ILivingEntity>("nearest_items", () => new NearestItemSensor());
+    // public static readonly SensorType<NearestLivingEntitySensor<ILivingEntity>, ILivingEntity> NearestLivingEntities =
+    //     new SensorType<NearestLivingEntitySensor<ILivingEntity>, ILivingEntity>("nearest_living_entities",
+    //         () => new NearestLivingEntitySensor<ILivingEntity>());
+    // public static readonly SensorType<PlayerSensor, ILivingEntity> NearestPlayers =
+    //     new SensorType<PlayerSensor, ILivingEntity>("nearest_players", () => new PlayerSensor());
 }

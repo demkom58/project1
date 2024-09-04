@@ -12,20 +12,17 @@ namespace project1.scripts.world.entity.ai;
 
 public class Brain<TOwner> where TOwner : ILivingEntity
 {
-    private readonly Dictionary<Activity, HashSet<MemoryModuleType<object>>>
-        _activityMemoriesToEraseWhenStopped = new();
-
-    private readonly Dictionary<Activity, HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>>>
-        _activityRequirements = new();
-
-    private readonly SortedDictionary<int, Dictionary<Activity, HashSet<Behavior<TOwner>>>>
-        _availableBehaviorsByPriority = new();
-
+    private readonly Dictionary<Activity, HashSet<MemoryModuleType<object>>> _activityMemoriesToEraseWhenStopped = new();
+    private readonly Dictionary<Activity, HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>>> _activityRequirements = new();
+    private readonly SortedDictionary<int, Dictionary<Activity, HashSet<Behavior<TOwner>>>> _availableBehaviorsByPriority = new();
     private readonly Dictionary<MemoryModuleType<object>, ExpirableValue<object>?> _memories = new();
+    private readonly Dictionary<SensorType<Sensor<ILivingEntity>, ILivingEntity>, Sensor<ILivingEntity>> _sensors = new();
 
-    private readonly Dictionary<SensorType<Sensor<ILivingEntity>, ILivingEntity>, Sensor<ILivingEntity>> _sensors =
-        new();
-
+    public Schedule Schedule { get; set; } = Schedules.Empty;
+    public HashSet<Activity> CoreActivities { get; set; } = new();
+    public HashSet<Activity> ActiveActivities { get; } = new();
+    public Activity DefaultActivity { get; set; } = Activities.Idle;
+    
     private long _lastScheduleUpdate;
 
     public Brain(
@@ -43,12 +40,7 @@ public class Brain<TOwner> where TOwner : ILivingEntity
 
         foreach (var memoryValue in memories) memoryValue.SetMemoryInternal(this);
     }
-
-    public Schedule Schedule { get; set; } = Schedules.Empty;
-    public HashSet<Activity> CoreActivities { get; set; } = new();
-    public HashSet<Activity> ActiveActivities { get; } = new();
-    public Activity DefaultActivity { get; set; } = Activities.Idle;
-
+    
     public bool HasMemoryValue<T>(MemoryModuleType<T> memoryModuleType)
     {
         return CheckMemory(memoryModuleType, MemoryStatus.ValuePresent);
@@ -359,20 +351,8 @@ public class Brain<TOwner> where TOwner : ILivingEntity
     }
 
 
-    public readonly struct MemoryValue<TU>
+    public readonly record struct MemoryValue<TU>(MemoryModuleType<TU> Type, ExpirableValue<TU>? Value)
     {
-        private readonly MemoryModuleType<TU> _type;
-        private readonly ExpirableValue<TU>? _value;
-
-        public MemoryValue(MemoryModuleType<TU> type, ExpirableValue<TU>? value)
-        {
-            _type = type;
-            _value = value;
-        }
-
-        public void SetMemoryInternal(Brain<TOwner> brain)
-        {
-            brain.SetMemoryInternal(_type, _value);
-        }
+        public void SetMemoryInternal(Brain<TOwner> brain) => brain.SetMemoryInternal(Type, Value);
     }
 }

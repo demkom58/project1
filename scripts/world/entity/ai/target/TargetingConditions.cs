@@ -16,28 +16,28 @@ public readonly record struct TargetingConditions(
     public bool Test(ILivingEntity? src, ILivingEntity target)
     {
         if (src == target) return false;
-        if (!target.Interactable) return false;
-        if (Selector != null && !Selector(target)) return false;
-
-        if (src == null)
-        {
-            if (IsCombat && !target.Aggreble) return false;
-
-            return true;
-        }
-
-        if (IsCombat && (!src.CanAttack(target) || !src.CanAttackType(target.Type) || src.IsAlliedTo(target)))
-            return false;
-
-        if (Range > 0.0)
-        {
-            var visibilityPercent = TestInvisible ? target.GetVisibilityPercent(src) : 1.0;
-            var maxRange = Mathf.Max(Range * visibilityPercent, MinVisibilityDistanceForInvisibleTarget);
-            double distance = src.DistanceToSqr(target.Position);
-            if (distance > maxRange * maxRange) return false;
-        }
-
-        if (CheckLineOfSight && src is Mob mob && !mob.Sensing.HasLineOfSight(target)) return false;
+        // if (!target.Interactable) return false;
+        // if (Selector != null && !Selector(target)) return false;
+        //
+        // if (src == null)
+        // {
+        //     if (IsCombat && !target.Aggreble) return false;
+        //
+        //     return true;
+        // }
+        //
+        // if (IsCombat && (!src.CanAttack(target) || !src.CanAttackType(target.Type) || src.IsAlliedTo(target)))
+        //     return false;
+        //
+        // if (Range > 0.0)
+        // {
+        //     var visibilityPercent = TestInvisible ? target.GetVisibilityPercent(src) : 1.0;
+        //     var maxRange = Mathf.Max(Range * visibilityPercent, MinVisibilityDistanceForInvisibleTarget);
+        //     double distance = src.DistanceToSqr(target.Position);
+        //     if (distance > maxRange * maxRange) return false;
+        // }
+        //
+        // if (CheckLineOfSight && src is Mob mob && !mob.Sensing.HasLineOfSight(target)) return false;
 
         return true;
     }
