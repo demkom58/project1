@@ -6,9 +6,9 @@ public interface IBehaviorControl<T> where T : ILivingEntity
 {
     public BehaviorStatus Status { get; }
     
-    public bool TryStart(Node level, T entity, long updateNumber);
+    public bool TryStart(IWorld level, T entity, long updateNumber);
     
-    public void TickOrStop(Node level, T entity, long updateNumber);
+    public void UpdateOrStop(IWorld level, T entity, long updateNumber);
     
-    public void DoStop(Node level, T entity, long updateNumber);
+    public void DoStop(IWorld level, T entity, long updateNumber);
 }

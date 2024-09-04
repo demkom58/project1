@@ -113,7 +113,7 @@ public class Behavior<T> : IBehaviorControl<T> where T : ILivingEntity
         this._maxDuration = maxDuration;
     }
 
-    public bool TryStart(Node level, T entity, long updateNumber)
+    public bool TryStart(IWorld level, T entity, long updateNumber)
     {
         if (this.HasRequiredMemories(entity) && this.CheckExtraStartConditions(level, entity))
         {
@@ -129,11 +129,11 @@ public class Behavior<T> : IBehaviorControl<T> where T : ILivingEntity
         return false;
     }
 
-    protected void Start(Node level, T entity, long updateNumber)
+    protected void Start(IWorld level, T entity, long updateNumber)
     {
     }
 
-    public void TickOrStop(Node level, T entity, long updateNumber)
+    public void UpdateOrStop(IWorld level, T entity, long updateNumber)
     {
         if (!this.TimedOut(updateNumber) && this.CanStillUse(level, entity, updateNumber))
         {
@@ -145,21 +145,21 @@ public class Behavior<T> : IBehaviorControl<T> where T : ILivingEntity
         }
     }
 
-    protected void Tick(Node level, T entity, long updateNumber)
+    protected void Tick(IWorld level, T entity, long updateNumber)
     {
     }
 
-    public void DoStop(Node level, T entity, long updateNumber)
+    public void DoStop(IWorld level, T entity, long updateNumber)
     {
         this.Status = BehaviorStatus.Stopped;
         this.Stop(level, entity, updateNumber);
     }
 
-    protected void Stop(Node level, T entity, long updateNumber)
+    protected void Stop(IWorld level, T entity, long updateNumber)
     {
     }
 
-    protected bool CanStillUse(Node level, T entity, long updateNumber)
+    protected bool CanStillUse(IWorld level, T entity, long updateNumber)
     {
         return false;
     }
@@ -169,7 +169,7 @@ public class Behavior<T> : IBehaviorControl<T> where T : ILivingEntity
         return updateNumber > this._endTimestamp;
     }
     
-    protected bool CheckExtraStartConditions(Node level, T entity)
+    protected bool CheckExtraStartConditions(IWorld level, T entity)
     {
         return true;
     }

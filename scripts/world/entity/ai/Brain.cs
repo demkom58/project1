@@ -11,14 +11,14 @@ using project1.scripts.world.entity.ai.sensor;
 
 namespace project1.scripts.world.entity.ai;
 
-public partial class Brain<TOwner> : Node where TOwner : ILivingEntity
+public class Brain<TOwner> where TOwner : ILivingEntity
 {
-    private Dictionary<MemoryModuleType<object>, ExpirableValue<object>> _memories = new ();
-    private Dictionary<SensorType<Sensor<ILivingEntity>,ILivingEntity>, Sensor<ILivingEntity>> _sensors = new ();
-    private SortedDictionary<int, Dictionary<Activity, HashSet<Behavior<TOwner>>>> _availableBehaviorsByPriority = new ();
-
-    private Dictionary<Activity, HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>>> _activityRequirements = new ();
-    private Dictionary<Activity, HashSet<MemoryModuleType<object>>> _activityMemoriesToEraseWhenStopped = new ();
+    private readonly Dictionary<MemoryModuleType<object>, ExpirableValue<object>?> _memories = new ();
+    private readonly Dictionary<SensorType<Sensor<ILivingEntity>,ILivingEntity>, Sensor<ILivingEntity>> _sensors = new ();
+    private readonly SortedDictionary<int, Dictionary<Activity, HashSet<Behavior<TOwner>>>> _availableBehaviorsByPriority = new ();
+    private readonly Dictionary<Activity, HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>>> _activityRequirements = new ();
+    private readonly Dictionary<Activity, HashSet<MemoryModuleType<object>>> _activityMemoriesToEraseWhenStopped = new ();
+    
     private long _lastScheduleUpdate = 0L;
 
     public Schedule Schedule { get; set; } = Schedule.Empty;
@@ -55,12 +55,12 @@ public partial class Brain<TOwner> : Node where TOwner : ILivingEntity
         }
     }
     
-    public bool hasMemoryValue(MemoryModuleType<object> memoryModuleType)
+    public bool HasMemoryValue<T>(MemoryModuleType<T> memoryModuleType)
     {
-        return checkMemory(memoryModuleType, MemoryStatus.ValuePresent);
+        return CheckMemory(memoryModuleType, MemoryStatus.ValuePresent);
     }
     
-    public void clearMemories()
+    public void ClearMemories()
     {
         foreach (MemoryModuleType<object> memoryModuleType in _memories.Keys)
         {
@@ -68,77 +68,81 @@ public partial class Brain<TOwner> : Node where TOwner : ILivingEntity
         }
     }
     
-    public void eraseMemory<T>(MemoryModuleType<T> memoryModuleType)
+    public void EraseMemory<T>(MemoryModuleType<T> memoryModuleType)
     {
-        setMemory(memoryModuleType, Optional<T>.Empty);
+        SetMemoryInternal(memoryModuleType, null);
     }
     
-    public void setMemory(MemoryModuleType<TOwner> memoryModuleType, TOwner value)
+    public void SetMemory<T>(MemoryModuleType<T> memoryModuleType, T value)
     {
-        setMemory(memoryModuleType, Optional<TOwner>.Of(value));
+        SetMemoryInternal(memoryModuleType, new (value));
     }
     
-    public void setMemoryWithExpiry<T>(MemoryModuleType<T> memoryModuleType, T value, long ttl)
+    public void SetMemoryWithExpiry<T>(MemoryModuleType<T> memoryModuleType, T value, long ttl)
     {
-        setMemoryInternal(memoryModuleType, Optional<ExpirableValue<T>>.Of(ExpirableValue<T>.Of(value, ttl)));
+        SetMemoryInternal(memoryModuleType, new (value, ttl));
     }
     
-    public void setMemory<T>(MemoryModuleType<T> memoryModuleType, Optional<T> optional)
+    private void SetMemoryInternal<T>(MemoryModuleType<T> memoryModuleType, ExpirableValue<T>? value)
     {
-        setMemoryInternal(memoryModuleType, optional.Map(ExpirableValue<T>.Of));
-    }
-    
-    private void setMemoryInternal<T>(MemoryModuleType<T> memoryModuleType, Optional<ExpirableValue<T>> optional)
-    {
-        if (_memories.ContainsKey(memoryModuleType))
+        var key = (MemoryModuleType<object>) (object) memoryModuleType;
+        
+        if (!_memories.ContainsKey(key)) return;
+        
+        if (value.HasValue && IsEmptyCollection(value.Value.Value!))
         {
-            if (optional.HasValue && IsEmptyCollection(optional.Value.Value))
-            {
-                eraseMemory(memoryModuleType);
-            }
-            else
-            {
-                _memories[memoryModuleType] = optional.Value;
-            }
+            EraseMemory(memoryModuleType);
+        }
+        else
+        {
+            _memories[key] = (ExpirableValue<object>?) (object?) value;
         }
     }
     
-    public Optional<T> getMemory<T>(MemoryModuleType<T> memoryModuleType)
+    public T? GetMemory<T>(MemoryModuleType<T> memoryModuleType)
     {
-        Optional<ExpirableValue<T>> optional = _memories[memoryModuleType];
-        if (optional == null)
+        var key = (MemoryModuleType<object>) (object) memoryModuleType;
+        // ReSharper disable once CanSimplifyDictionaryLookupWithTryGetValue
+        if (!_memories.ContainsKey(key))
         {
             throw new InvalidOperationException("Unregistered memory fetched: " + memoryModuleType);
         }
-        return optional.Map(ExpirableValue<T>.GetValue);
+        
+        ExpirableValue<object>? stored = _memories[key];
+        return stored.HasValue ? (T?) stored.Value.Value : default;
     }
     
-    public Optional<T> getMemoryInternal<T>(MemoryModuleType<T> memoryModuleType)
+    public T? GetMemoryInternal<T>(MemoryModuleType<T> memoryModuleType)
     {
-        Optional<ExpirableValue<T>> optional = _memories[memoryModuleType];
-        return optional.Map(ExpirableValue<T>.GetValue);
+        var key = (MemoryModuleType<object>) (object) memoryModuleType;
+        ExpirableValue<object>? stored = _memories[key];
+        return stored.HasValue ? (T?) stored.Value.Value : default;
     }
     
-    public long getTimeUntilExpiry<T>(MemoryModuleType<T> memoryModuleType)
+    public long GetTimeUntilExpiry<T>(MemoryModuleType<T> memoryModuleType)
     {
-        Optional<ExpirableValue<T>> optional = _memories[memoryModuleType];
-        return optional.Map(ExpirableValue<T>.GetTimeToLive).OrElse(0L);
+        var key = (MemoryModuleType<object>) (object) memoryModuleType;
+        ExpirableValue<object>? stored = _memories[key];
+        return stored?.TimeToLive ?? 0L;
     }
     
-    public bool isMemoryValue<T>(MemoryModuleType<T> memoryModuleType, T value)
+    public bool IsMemoryValue<T>(MemoryModuleType<T> memoryModuleType, T value)
     {
-        return hasMemoryValue(memoryModuleType) 
-               && getMemory(memoryModuleType).Filter(o => o.Equals(value)).HasValue;
+        return HasMemoryValue(memoryModuleType) && GetMemory(memoryModuleType)!.Equals(value);
     }
     
-    public bool checkMemory<T>(MemoryModuleType<T> memoryModuleType, MemoryStatus memoryStatus)
+    public bool CheckMemory<T>(MemoryModuleType<T> memoryModuleType, MemoryStatus memoryStatus)
     {
-        Optional<ExpirableValue<T>> optional = _memories[memoryModuleType];
+        var key = (MemoryModuleType<object>) (object) memoryModuleType;
+        // ReSharper disable once CanSimplifyDictionaryLookupWithTryGetValue
+        if (!_memories.ContainsKey(key)) return false;
+        
+        ExpirableValue<object>? memory = _memories[key];
         return memoryStatus switch
         {
             MemoryStatus.Registered => true,
-            MemoryStatus.ValuePresent => optional.HasValue,
-            MemoryStatus.ValueAbsent => !optional.HasValue,
+            MemoryStatus.ValuePresent => memory.HasValue,
+            MemoryStatus.ValueAbsent => !memory.HasValue,
             _ => false
         };
     }
@@ -159,21 +163,22 @@ public partial class Brain<TOwner> : Node where TOwner : ILivingEntity
         SetActiveActivity(DefaultActivity);
     }
     
-    public Optional<Activity> GetActiveNonCoreActivity()
+    public Activity? GetActiveNonCoreActivity()
     {
         foreach (Activity activity in ActiveActivities)
         {
             if (!CoreActivities.Contains(activity))
             {
-                return Optional<Activity>.Of(activity);
+                return activity;
             }
         }
-        return Optional<Activity>.Empty;
+
+        return null;
     }
     
     public void SetActiveActivityIfPossible(Activity activity)
     {
-        if (activityRequirementsAreMet(activity))
+        if (ActivityRequirementsAreMet(activity))
         {
             SetActiveActivity(activity);
         }
@@ -195,14 +200,13 @@ public partial class Brain<TOwner> : Node where TOwner : ILivingEntity
     
     private void EraseMemoriesForOtherActivitiesThan(Activity activity)
     {
-        foreach (Activity activeActivity in ActiveActivities)
+        foreach (var activeActivity in ActiveActivities.Where(activeActivity => !activeActivity.Equals(activity)))
         {
-            if (activeActivity.Equals(activity)) continue;
-            if (!_activityMemoriesToEraseWhenStopped.TryGetValue(activeActivity, out var value)) continue;
+            if (!_activityMemoriesToEraseWhenStopped.TryGetValue(activeActivity, out var memoryTypes)) continue;
             
-            foreach (MemoryModuleType<object> memoryModuleType in value)
+            foreach (MemoryModuleType<object> type in memoryTypes)
             {
-                eraseMemory(memoryModuleType);
+                EraseMemory(type);
             }
         }
     }
@@ -219,21 +223,18 @@ public partial class Brain<TOwner> : Node where TOwner : ILivingEntity
         }
     }
     
-    public void SetActiveActivityToFirstValid(List<Activity> list)
+    public void SetActiveActivityToFirstValid(List<Activity> activities)
     {
-        foreach (Activity activity in list)
+        foreach (var activity in activities.Where(ActivityRequirementsAreMet))
         {
-            if (activityRequirementsAreMet(activity))
-            {
-                SetActiveActivity(activity);
-                break;
-            }
+            SetActiveActivity(activity);
+            break;
         }
     }
     
-    public void AddActivity(Activity activity, int i, ImmutableList<Behavior<TOwner>> immutableList)
+    public void AddActivity(Activity activity, int priority, IEnumerable<Behavior<TOwner>> behaviors)
     {
-        AddActivity(activity, CreatePriorityTuples(i, immutableList));
+        AddActivity(activity, CreatePriorityTuples(priority, behaviors));
     }
     
     public void AddActivityAndRemoveMemoryWhenStopped(
@@ -277,18 +278,18 @@ public partial class Brain<TOwner> : Node where TOwner : ILivingEntity
         }
         foreach (Tuple<int, Behavior<TOwner>> tuple in behaviors)
         {
-            var activity2Behaviors = _availableBehaviorsByPriority[tuple.Item1];
-            if (activity2Behaviors == null)
+            var activity2Behs = _availableBehaviorsByPriority[tuple.Item1];
+            if (activity2Behs == null)
             {
-                activity2Behaviors = new Dictionary<Activity, HashSet<Behavior<TOwner>>>();
-                _availableBehaviorsByPriority[tuple.Item1] = activity2Behaviors;
+                activity2Behs = new Dictionary<Activity, HashSet<Behavior<TOwner>>>();
+                _availableBehaviorsByPriority[tuple.Item1] = activity2Behs;
             }
             
-            var behs = activity2Behaviors[act];
+            var behs = activity2Behs[act];
             if (behs == null)
             {
                 behs = new HashSet<Behavior<TOwner>>();
-                activity2Behaviors[act] = behs;
+                activity2Behs[act] = behs;
             }
             
             behs.Add(tuple.Item2);
@@ -308,7 +309,7 @@ public partial class Brain<TOwner> : Node where TOwner : ILivingEntity
     public Brain<TOwner> CopyWithoutBehaviors()
     {
         Brain<TOwner> brain = new Brain<TOwner>(_memories.Keys, _sensors.Keys, ImmutableList<MemoryValue<object>>.Empty);
-        foreach (KeyValuePair<MemoryModuleType<object>, ExpirableValue<object>> entry in _memories)
+        foreach (KeyValuePair<MemoryModuleType<object>, ExpirableValue<object>?> entry in _memories)
         {
             MemoryModuleType<object> memoryModuleType = entry.Key;
             if (entry.Value.HasValue)
@@ -319,91 +320,82 @@ public partial class Brain<TOwner> : Node where TOwner : ILivingEntity
         return brain;
     }
     
-    public void Tick(ServerLevel serverLevel, TOwner livingEntity)
+    public void Update(IWorld world, TOwner owner)
     {
         ForgetOutdatedMemories();
-        TickSensors(serverLevel, livingEntity);
-        StartEachNonRunningBehavior(serverLevel, livingEntity);
-        TickEachRunningBehavior(serverLevel, livingEntity);
+        UpdateSensors(world, owner);
+        StartEachNonRunningBehavior(world, owner);
+        UpdateEachRunningBehavior(world, owner);
     }
     
-    private void TickSensors(ServerLevel serverLevel, TOwner livingEntity)
+    private void UpdateSensors(IWorld world, TOwner owner)
     {
         foreach (Sensor<ILivingEntity> sensor in _sensors.Values)
         {
-            sensor.Tick(serverLevel, livingEntity);
+            sensor.Update(world, owner);
         }
     }
     
     private void ForgetOutdatedMemories()
     {
-        foreach (KeyValueTuple<MemoryModuleType<object>, ExpirableValue<object>> entry in _memories)
+        foreach (KeyValuePair<MemoryModuleType<object>, ExpirableValue<object>?> entry in _memories)
         {
-            if (!entry.Value.HasValue) continue;
+            ExpirableValue<object>? expirableValue = entry.Value;
+            if (!expirableValue.HasValue) continue;
             
-            ExpirableValue<object> expirableValue = entry.Value;
-            if (expirableValue.HasExpired())
+            if (expirableValue.Value.IsExpired)
             {
-                eraseMemory(entry.Key);
+                EraseMemory(entry.Key);
             }
-            expirableValue.Update();
+            else
+            {
+                expirableValue.Value.Update();
+            }
         }
     }
     
-    public void StopAll(ServerLevel serverLevel, TOwner livingEntity)
+    public void StopAll(IWorld world, TOwner owner)
     {
-        long gameTime = ((Entity)livingEntity).Level.GetGameTime();
+        long gameTime = owner.World.GameTime;
         foreach (Behavior<TOwner> behavior in GetRunningBehaviors())
         {
-            behavior.DoStop(serverLevel, livingEntity, gameTime);
+            behavior.DoStop(world, owner, gameTime);
         }
     }
     
-    private void StartEachNonRunningBehavior(ServerLevel serverLevel, TOwner livingEntity)
+    private void StartEachNonRunningBehavior(IWorld world, TOwner owner)
     {
-        long gameTime = serverLevel.GetGameTime();
-        foreach (Dictionary<Activity, HashSet<Behavior<TOwner>>> map in _availableBehaviorsByPriority.Values)
+        long gameTime = world.GameTime;
+        foreach (Dictionary<Activity, HashSet<Behavior<TOwner>>> actBehs in _availableBehaviorsByPriority.Values)
         {
-            foreach (KeyValueTuple<Activity, HashSet<Behavior<TOwner>>> entry in map)
+            foreach (var (activity, behaviors) in actBehs)
             {
-                Activity activity = entry.Key;
-                if (ActiveActivities.Contains(activity))
+                if (ActiveActivities.Contains(activity)) continue;
+
+                foreach (var behavior in behaviors.Where(behavior => behavior.Status == BehaviorStatus.Stopped))
                 {
-                    continue;
-                }
-                HashSet<Behavior<TOwner>> set = entry.Value;
-                foreach (Behavior<TOwner> behavior in set)
-                {
-                    if (behavior.Status != BehaviorStatus.Stopped)
-                    {
-                        continue;
-                    }
-                    behavior.TryStart(serverLevel, livingEntity, gameTime);
+                    behavior.TryStart(world, owner, gameTime);
                 }
             }
         }
     }
     
-    private void TickEachRunningBehavior(ServerLevel serverLevel, TOwner livingEntity)
+    private void UpdateEachRunningBehavior(IWorld world, TOwner owner)
     {
-        long gameTime = serverLevel.GetGameTime();
+        long gameTime = world.GameTime;
         foreach (Behavior<TOwner> behavior in GetRunningBehaviors())
         {
-            behavior.TickOrStop(serverLevel, livingEntity, gameTime);
+            behavior.UpdateOrStop(world, owner, gameTime);
         }
     }
     
-    private bool activityRequirementsAreMet(Activity activity)
+    private bool ActivityRequirementsAreMet(Activity activity)
     {
-        if (!_activityRequirements.ContainsKey(activity))
+        if (!_activityRequirements.TryGetValue(activity, out var requirement)) return false;
+        
+        foreach (var (memoryModuleType, memoryStatus) in requirement)
         {
-            return false;
-        }
-        foreach (Tuple<MemoryModuleType<object>, MemoryStatus> Tuple in _activityRequirements[activity])
-        {
-            MemoryStatus memoryStatus = Tuple.Item2;
-            MemoryModuleType<object> memoryModuleType = Tuple.Item1;
-            if (!checkMemory(memoryModuleType, memoryStatus))
+            if (!CheckMemory(memoryModuleType, memoryStatus))
             {
                 return false;
             }
@@ -426,9 +418,9 @@ public partial class Brain<TOwner> : Node where TOwner : ILivingEntity
     public readonly struct MemoryValue<TU>
     {
         private readonly MemoryModuleType<TU> _type;
-        private readonly Optional<ExpirableValue<TU>> _value;
+        private readonly ExpirableValue<TU>? _value;
 
-        public MemoryValue(MemoryModuleType<TU> type, Optional<ExpirableValue<TU>> value)
+        public MemoryValue(MemoryModuleType<TU> type, ExpirableValue<TU>? value)
         {
             _type = type;
             _value = value;
@@ -436,7 +428,7 @@ public partial class Brain<TOwner> : Node where TOwner : ILivingEntity
 
         public void SetMemoryInternal(Brain<TOwner> brain)
         {
-            brain.setMemoryInternal(_type, _value);
+            brain.SetMemoryInternal(_type, _value);
         }
     }
 }

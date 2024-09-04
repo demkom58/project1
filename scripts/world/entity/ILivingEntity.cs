@@ -5,4 +5,6 @@ namespace project1.scripts.world.entity;
 public interface ILivingEntity
 {
     public Brain<ILivingEntity> Brain { get; }
+    
+    public IWorld World { get; }
 }

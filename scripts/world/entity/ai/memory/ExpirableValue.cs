@@ -6,6 +6,8 @@ public struct ExpirableValue<TYPE>
 {
     public readonly TYPE Value;
     public long TimeToLive { get; set; }
+    public bool IsExpired => TimeToLive <= 0;
+    public bool IsExpirable => TimeToLive != Int64.MaxValue;
     
     public ExpirableValue(TYPE value, long timeToLive = Int64.MaxValue)
     {
@@ -15,19 +17,9 @@ public struct ExpirableValue<TYPE>
 
     public void Update()
     {
-        if (CanExpire())
+        if (IsExpirable)
         {
             TimeToLive--;
         }
-    }
-    
-    public bool IsExpired(long currentTime)
-    {
-        return currentTime >= TimeToLive;
-    }
-    
-    public bool CanExpire()
-    {
-        return TimeToLive != Int64.MaxValue;
     }
 }
