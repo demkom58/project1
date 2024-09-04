@@ -3,7 +3,7 @@
 public class MemoryModuleType<T>
 {
     public readonly string Name;
-    
+
     public MemoryModuleType(string name)
     {
         Name = name;

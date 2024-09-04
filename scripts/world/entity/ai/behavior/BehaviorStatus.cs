@@ -3,5 +3,5 @@
 public enum BehaviorStatus
 {
     Stopped,
-    Running,
+    Running
 }

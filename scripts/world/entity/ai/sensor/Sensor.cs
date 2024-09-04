@@ -1,41 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using Godot;
+﻿using System.Collections.Generic;
 using project1.scripts.world.entity.ai.memory;
 
 namespace project1.scripts.world.entity.ai.sensor;
 
 public abstract class Sensor<T> where T : ILivingEntity
 {
-    private const int DefaultScanRate = 20;
-    private const int TargetingRange = 16;
-    
-    private static readonly Random Random = new();
-    private static readonly TargetingConditions TARGET_CONDITIONS = TargetingConditions.ForNonCombat().Range(TargetingRange);
-
-    private static readonly TargetingConditions TARGET_CONDITIONS_IGNORE_INVISIBILITY_TESTING =
-        TargetingConditions.ForNonCombat().Range(16.0).IgnoreInvisibilityTesting();
-
-    private static readonly TargetingConditions ATTACK_TARGET_CONDITIONS = TargetingConditions.ForCombat().Range(TargetingRange);
-
-    private static readonly TargetingConditions ATTACK_TARGET_CONDITIONS_IGNORE_INVISIBILITY_TESTING =
-        TargetingConditions.ForCombat().Range(16.0).IgnoreInvisibilityTesting();
-
-    private static readonly TargetingConditions ATTACK_TARGET_CONDITIONS_IGNORE_LINE_OF_SIGHT =
-        TargetingConditions.ForCombat().Range(16.0).IgnoreLineOfSight();
-
-    private static readonly TargetingConditions ATTACK_TARGET_CONDITIONS_IGNORE_INVISIBILITY_AND_LINE_OF_SIGHT =
-        TargetingConditions.ForCombat().Range(16.0).IgnoreLineOfSight().IgnoreInvisibilityTesting();
-
     private readonly int _scanRate;
     private long _timeToTick;
 
-    public Sensor(int scanRate = DefaultScanRate)
+    public Sensor(int scanRate = Sensors.DefaultScanRate)
     {
         _scanRate = scanRate;
-        _timeToTick = Random.Next(scanRate);
+        _timeToTick = Sensors.Random.Next(scanRate);
     }
-    
+
     public void Update(IWorld world, T entity)
     {
         if (--_timeToTick > 0) return;
@@ -49,31 +27,25 @@ public abstract class Sensor<T> where T : ILivingEntity
 
     public static bool IsEntityTargetable(ILivingEntity source, ILivingEntity target)
     {
-        if (source.Brain.IsMemoryValue(MemoryModuleType<object>.ATTACK_TARGET, target))
-        {
-            return TARGET_CONDITIONS_IGNORE_INVISIBILITY_TESTING.Test(source, target);
-        }
+        if (source.Brain.IsMemoryValue(MemoryModuleTypes.AttackTarget, target))
+            return Sensors.TargetConditionsIgnoreInvisibilityTesting.Test(source, target);
 
-        return TARGET_CONDITIONS.Test(source, target);
+        return Sensors.TargetingConditions.Test(source, target);
     }
 
     public static bool IsEntityAttackable(ILivingEntity source, ILivingEntity target)
     {
-        if (source.Brain.IsMemoryValue(MemoryModuleType<object>.ATTACK_TARGET, target))
-        {
-            return ATTACK_TARGET_CONDITIONS_IGNORE_INVISIBILITY_TESTING.Test(source, target);
-        }
+        if (source.Brain.IsMemoryValue(MemoryModuleTypes.AttackTarget, target))
+            return Sensors.AttackTargetConditionsIgnoreInvisibilityTesting.Test(source, target);
 
-        return ATTACK_TARGET_CONDITIONS.Test(source, target);
+        return Sensors.AttackTargetConditions.Test(source, target);
     }
 
     public static bool IsEntityAttackableIgnoringLineOfSight(ILivingEntity source, ILivingEntity target)
     {
-        if (source.Brain.IsMemoryValue(MemoryModuleType<object>.ATTACK_TARGET, target))
-        {
-            return ATTACK_TARGET_CONDITIONS_IGNORE_INVISIBILITY_AND_LINE_OF_SIGHT.Test(source, target);
-        }
+        if (source.Brain.IsMemoryValue(MemoryModuleTypes.AttackTarget, target))
+            return Sensors.AttackTargetConditionsIgnoreInvisibilityAndLineOfSight.Test(source, target);
 
-        return ATTACK_TARGET_CONDITIONS_IGNORE_LINE_OF_SIGHT.Test(source, target);
+        return Sensors.AttackTargetConditionsIgnoreLineOfSight.Test(source, target);
     }
 }
