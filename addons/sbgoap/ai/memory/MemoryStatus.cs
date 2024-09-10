@@ -4,5 +4,6 @@ public enum MemoryStatus
 {
     ValuePresent,
     ValueAbsent,
-    Registered
+    Registered,
+    Unregistered
 }

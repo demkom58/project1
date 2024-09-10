@@ -27,6 +27,16 @@ public partial class SBGOAP : EditorPlugin
 		texture = GD.Load<Texture2D>("res://addons/sbgoap/icons/bookshelf.svg");
 		AddCustomType("Memories", "Node", script, texture);
 		
+		// Memory Node
+		script = GD.Load<Script>("res://addons/sbgoap/ai/memory/MemoryNode.cs");
+		texture = GD.Load<Texture2D>("res://addons/sbgoap/icons/book.svg");
+		AddCustomType("Memory", "Node", script, texture);
+		
+		// Expirable Memory Node
+		script = GD.Load<Script>("res://addons/sbgoap/ai/memory/ExpirableMemoryNode.cs");
+		texture = GD.Load<Texture2D>("res://addons/sbgoap/icons/book.svg");
+		AddCustomType("Expirable Memory", "Node", script, texture);
+		
 		// Behaviors Node
 		script = GD.Load<Script>("res://addons/sbgoap/ai/behavior/Behaviors.cs");
 		texture = GD.Load<Texture2D>("res://addons/sbgoap/icons/man-standing.svg");
@@ -38,6 +48,8 @@ public partial class SBGOAP : EditorPlugin
 		RemoveCustomType("Brain");
 		RemoveCustomType("Schedules");
 		RemoveCustomType("Sensors");
+		RemoveCustomType("Memory");
+		RemoveCustomType("Expirable Memory");
 		RemoveCustomType("Memories");
 		RemoveCustomType("Behaviors");
 	}

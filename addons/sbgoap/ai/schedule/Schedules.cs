@@ -12,8 +12,8 @@ public partial class Schedules : Node
 {
     public static readonly Schedule Empty = new();
     
-    private readonly Dictionary<Activity, HashSet<MemoryModuleType<object>>> _activityMemoriesToEraseWhenStopped = new();
-    private readonly Dictionary<Activity, HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>>> _activityRequirements = new();
+    private readonly Dictionary<Activity, HashSet<string>> _activityMemoriesToEraseWhenStopped = new();
+    private readonly Dictionary<Activity, HashSet<Tuple<string, MemoryStatus>>> _activityRequirements = new();
     private readonly SortedDictionary<int, Dictionary<Activity, HashSet<Behavior>>> _availableBehaviorsByPriority = new();
     
     private HashSet<Activity> _coreActivities = new();
@@ -133,12 +133,12 @@ public partial class Schedules : Node
         Activity activity,
         int priority,
         IEnumerable<Behavior> behaviors,
-        MemoryModuleType<object> memoryType)
+        string memoryType)
     {
-        HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>> memoriesRequirements
-            = new() { new Tuple<MemoryModuleType<object>, MemoryStatus>(memoryType, MemoryStatus.ValuePresent) };
+        HashSet<Tuple<string, MemoryStatus>> memoriesRequirements
+            = new() { new Tuple<string, MemoryStatus>(memoryType, MemoryStatus.ValuePresent) };
 
-        HashSet<MemoryModuleType<object>> eraseOnStopMemories = new() { memoryType };
+        HashSet<string> eraseOnStopMemories = new() { memoryType };
 
         AddActivityAndRemoveMemoriesWhenStopped(activity,
             CreatePriorityTuples(priority, behaviors), memoriesRequirements, eraseOnStopMemories);
@@ -147,22 +147,22 @@ public partial class Schedules : Node
     public void AddActivity(Activity activity, IEnumerable<Tuple<int, Behavior>> behaviors)
     {
         AddActivityAndRemoveMemoriesWhenStopped(activity, behaviors,
-            new HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>>(), new HashSet<MemoryModuleType<object>>());
+            new HashSet<Tuple<string, MemoryStatus>>(), new HashSet<string>());
     }
 
     public void AddActivityWithConditions(
         Activity activity,
         IEnumerable<Tuple<int, Behavior>> behaviors,
-        HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>> set)
+        HashSet<Tuple<string, MemoryStatus>> set)
     {
-        AddActivityAndRemoveMemoriesWhenStopped(activity, behaviors, set, new HashSet<MemoryModuleType<object>>());
+        AddActivityAndRemoveMemoriesWhenStopped(activity, behaviors, set, new HashSet<string>());
     }
 
     public void AddActivityAndRemoveMemoriesWhenStopped(
         Activity act,
         IEnumerable<Tuple<int, Behavior>> behaviors,
-        HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>> memoriesRequirements,
-        HashSet<MemoryModuleType<object>> eraseOnStopMemories)
+        HashSet<Tuple<string, MemoryStatus>> memoriesRequirements,
+        HashSet<string> eraseOnStopMemories)
     {
         _activityRequirements.Add(act, memoriesRequirements);
         if (eraseOnStopMemories.Count > 0) _activityMemoriesToEraseWhenStopped.Add(act, eraseOnStopMemories);
