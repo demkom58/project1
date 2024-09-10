@@ -11,11 +11,11 @@ public class Behavior : IBehaviorControl
     private readonly int _maxDuration;
     private readonly int _minDuration;
 
-    protected readonly Dictionary<MemoryModuleType<object>, MemoryStatus> EntryCondition;
+    protected readonly Dictionary<string, MemoryStatus> EntryCondition;
     private long _endTimestamp;
 
     public Behavior(
-        Dictionary<MemoryModuleType<object>, MemoryStatus> entryCondition,
+        Dictionary<string, MemoryStatus> entryCondition,
         int minDuration = DEFAULT_DURATION,
         int maxDuration = DEFAULT_DURATION)
     {
