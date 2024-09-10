@@ -9,7 +9,7 @@ namespace project1.scripts;
 /// without creating direct dependencies between them. It is a simple implementation
 /// of the observer pattern.
 /// </summary>
-public partial class EventBus : Object
+public partial class EventBus : GodotObject
 {
     private static Dictionary<Type, List<object>> _handlers = new (); 
 
