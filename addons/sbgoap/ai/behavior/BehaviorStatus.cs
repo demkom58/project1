@@ -1,4 +1,4 @@
-﻿namespace project1.scripts.world.entity.ai.behavior;
+﻿namespace project1.addons.sbgoap.ai.behavior;
 
 public enum BehaviorStatus
 {

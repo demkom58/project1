@@ -1,4 +1,4 @@
-﻿namespace project1.scripts.world.entity.ai.memory;
+﻿namespace project1.addons.sbgoap.ai.memory;
 
 public struct ExpirableValue<TYPE>
 {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace project1.scripts.world.entity.ai.schedule;
+namespace project1.addons.sbgoap.ai.schedule;
 
 public class Timeline
 {

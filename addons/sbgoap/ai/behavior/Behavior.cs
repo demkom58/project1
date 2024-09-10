@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using project1.scripts.world.entity.ai.memory;
+using Godot;
+using project1.addons.sbgoap.ai.memory;
 
-namespace project1.scripts.world.entity.ai.behavior;
+namespace project1.addons.sbgoap.ai.behavior;
 
-public class Behavior<T> : IBehaviorControl<T> where T : ILivingEntity
+public class Behavior : IBehaviorControl
 {
     public const int DEFAULT_DURATION = 60;
     private readonly int _maxDuration;
@@ -25,9 +26,9 @@ public class Behavior<T> : IBehaviorControl<T> where T : ILivingEntity
 
     public BehaviorStatus Status { get; private set; } = BehaviorStatus.Stopped;
 
-    public bool TryStart(IWorld level, T entity, long gameTime)
+    public bool TryStart(long gameTime)
     {
-        if (HasRequiredMemories(entity) && CheckExtraStartConditions(level, entity))
+        if (HasRequiredMemories() && CheckExtraStartConditions())
         {
             Status = BehaviorStatus.Running;
 
@@ -35,40 +36,40 @@ public class Behavior<T> : IBehaviorControl<T> where T : ILivingEntity
             var randomizedDuration = _minDuration + randomAddition;
             _endTimestamp = gameTime + randomizedDuration;
 
-            Start(level, entity, gameTime);
+            Start(gameTime);
             return true;
         }
 
         return false;
     }
 
-    public void UpdateOrStop(IWorld level, T entity, long gameTime)
+    public void UpdateOrStop(long gameTime)
     {
-        if (!TimedOut(gameTime) && CanStillUse(level, entity, gameTime))
-            Tick(level, entity, gameTime);
+        if (!TimedOut(gameTime) && CanStillUse(gameTime))
+            Tick(gameTime);
         else
-            DoStop(level, entity, gameTime);
+            DoStop(gameTime);
     }
 
-    public void DoStop(IWorld level, T entity, long gameTime)
+    public void DoStop(long gameTime)
     {
         Status = BehaviorStatus.Stopped;
-        Stop(level, entity, gameTime);
+        Stop(gameTime);
     }
 
-    protected void Start(IWorld level, T entity, long gameTime)
+    protected void Start(long gameTime)
     {
     }
 
-    protected void Tick(IWorld level, T entity, long gameTime)
+    protected void Tick(long gameTime)
     {
     }
 
-    protected void Stop(IWorld level, T entity, long gameTime)
+    protected void Stop(long gameTime)
     {
     }
 
-    protected bool CanStillUse(IWorld level, T entity, long gameTime)
+    protected bool CanStillUse(long gameTime)
     {
         return false;
     }
@@ -78,16 +79,16 @@ public class Behavior<T> : IBehaviorControl<T> where T : ILivingEntity
         return updateNumber > _endTimestamp;
     }
 
-    protected bool CheckExtraStartConditions(IWorld level, T entity)
+    protected bool CheckExtraStartConditions()
     {
         return true;
     }
 
-    protected bool HasRequiredMemories(T entity)
+    protected bool HasRequiredMemories()
     {
         foreach (var entry in EntryCondition)
         {
-            if (entity.Brain.CheckMemory(entry.Key, entry.Value)) continue;
+            // todo: if (entity.Brain.CheckMemory(entry.Key, entry.Value)) continue;
             return false;
         }
 

@@ -1,6 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://es4ntcjuirxo"]
+[gd_scene load_steps=11 format=3 uid="uid://es4ntcjuirxo"]
 
 [ext_resource type="Script" path="res://scripts/world/entity/Counter.cs" id="1_w0x5a"]
+[ext_resource type="Script" path="res://addons/sbgoap/ai/Brain.cs" id="2_4r63y"]
+[ext_resource type="Script" path="res://addons/sbgoap/ai/memory/Memories.cs" id="3_oxe8n"]
+[ext_resource type="Script" path="res://addons/sbgoap/ai/sensor/Sensors.cs" id="4_x0up5"]
+[ext_resource type="Script" path="res://addons/sbgoap/ai/behavior/Behaviors.cs" id="5_nn2d4"]
+[ext_resource type="Script" path="res://addons/sbgoap/ai/schedule/Schedules.cs" id="6_p7lkb"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_tv403"]
 size = Vector2(20, 20)
@@ -49,3 +54,18 @@ script = ExtResource("1_w0x5a")
 
 [node name="Hunger" type="Node" parent="CharacterBody3D/Counters"]
 script = ExtResource("1_w0x5a")
+
+[node name="Brain" type="Node" parent="CharacterBody3D"]
+script = ExtResource("2_4r63y")
+
+[node name="Memories" type="Node" parent="CharacterBody3D/Brain"]
+script = ExtResource("3_oxe8n")
+
+[node name="Sensors" type="Node" parent="CharacterBody3D/Brain"]
+script = ExtResource("4_x0up5")
+
+[node name="Behaviors" type="Node" parent="CharacterBody3D/Brain"]
+script = ExtResource("5_nn2d4")
+
+[node name="Schedules" type="Node" parent="CharacterBody3D/Brain"]
+script = ExtResource("6_p7lkb")

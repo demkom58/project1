@@ -7,4 +7,16 @@
     <Nullable>enable</Nullable>
     <LangVersion>11</LangVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <Content Include="addons\sbgoap\icons\activity.svg" />
+    <Content Include="addons\sbgoap\icons\alarm.svg" />
+    <Content Include="addons\sbgoap\icons\arm-muscle.svg" />
+    <Content Include="addons\sbgoap\icons\book.svg" />
+    <Content Include="addons\sbgoap\icons\bookshelf.svg" />
+    <Content Include="addons\sbgoap\icons\brain.svg" />
+    <Content Include="addons\sbgoap\icons\list.svg" />
+    <Content Include="addons\sbgoap\icons\man-standing.svg" />
+    <Content Include="addons\sbgoap\icons\ringing-bell.svg" />
+    <Content Include="addons\sbgoap\icons\schedule.svg" />
+  </ItemGroup>
 </Project>

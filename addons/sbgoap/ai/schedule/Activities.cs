@@ -1,4 +1,4 @@
-﻿namespace project1.scripts.world.entity.ai.schedule;
+﻿namespace project1.addons.sbgoap.ai.schedule;
 
 public class Activities
 {
