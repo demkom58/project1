@@ -28,16 +28,4 @@ public partial class MemoryNode : Node
         if (GetParent() is not Memories) return new[] { "Node must be a child of a Memories node." };
         return base._GetConfigurationWarnings();
     }
-
-    public override void _EnterTree()
-    {
-        if (GetParent() is not Memories memories) return;
-        memories.Content[GetName()] = this;
-    }
-    
-    public override void _ExitTree()
-    {
-        if (GetParent() is not Memories memories) return;
-        memories.Content.Remove(GetName());
-    }
 }

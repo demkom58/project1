@@ -21,6 +21,58 @@ public partial class Brain : Node
 
     public Brain()
     {
+        ChildEnteredTree += node =>
+        {
+            switch (node)
+            {
+                case Memories newMemories when Memories != null:
+                    throw new InvalidOperationException("Brain already has a Memories node.");
+                case Memories newMemories:
+                    Memories = newMemories;
+                    break;
+                
+                case Sensors newSensor when Sensors != null:
+                    throw new InvalidOperationException("Brain already has a Sensors node.");
+                case Sensors newSensor:
+                    Sensors = newSensor;
+                    break;
+                
+                case Behaviors newBehaviors when Behaviors != null:
+                    throw new InvalidOperationException("Brain already has a Behaviors node.");
+                case Behaviors newBehaviors:
+                    Behaviors = newBehaviors;
+                    break;
+                
+                case Schedules newSchedules when Schedules != null:
+                    throw new InvalidOperationException("Brain already has a Schedules node.");
+                case Schedules newSchedules:
+                    Schedules = newSchedules;
+                    break;
+            }
+        };
+        
+        ChildExitingTree += node =>
+        {
+            switch (node)
+            {
+                case Memories oldMemories when Memories == oldMemories:
+                    Memories = null;
+                    break;
+                
+                case Sensors oldSensor when Sensors == oldSensor:
+                    Sensors = null;
+                    break;
+                
+                case Behaviors oldBehaviors when Behaviors == oldBehaviors:
+                    Behaviors = null;
+                    break;
+                
+                case Schedules oldSchedules when Schedules == oldSchedules:
+                    Schedules = null;
+                    break;
+            }
+        };
+        
         // foreach (var type in memoryTypes) _memories.Add(type, new ExpirableValue<object>());
         //
         // foreach (var sensorType in sensors) _sensors.AddRange(sensorType, sensorType.Create());

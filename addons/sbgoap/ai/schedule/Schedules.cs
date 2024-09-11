@@ -37,18 +37,6 @@ public partial class Schedules : Node
         if (GetParent() is not Brain) return new[] { "Node must be a child of a Brain node." };
         return base._GetConfigurationWarnings();
     }
-
-    public override void _EnterTree()
-    {
-        if (GetParent() is not Brain brain) return;
-        brain.Schedules = this;
-    }
-
-    public override void _ExitTree()
-    {
-        if (GetParent() is not Brain brain) return;
-        brain.Schedules = null;
-    }
     
     public List<Behavior> GetRunningBehaviors()
     {
