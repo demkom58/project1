@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using Godot;
+﻿using Godot;
 
 namespace project1.addons.sbgoap.ai.memory;
 
-[Tool]
 [GlobalClass]
 public partial class MemoryNode : Node
 {
@@ -21,11 +19,5 @@ public partial class MemoryNode : Node
     public virtual void Clear()
     {
         Value = null;
-    }
-    
-    public override string[] _GetConfigurationWarnings()
-    {
-        if (GetParent() is not Memories) return new[] { "Node must be a child of a Memories node." };
-        return base._GetConfigurationWarnings();
     }
 }

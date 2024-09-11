@@ -1,10 +1,11 @@
-[gd_scene load_steps=12 format=3 uid="uid://es4ntcjuirxo"]
+[gd_scene load_steps=13 format=3 uid="uid://es4ntcjuirxo"]
 
 [ext_resource type="Script" path="res://scripts/world/entity/Counter.cs" id="1_w0x5a"]
 [ext_resource type="Script" path="res://addons/sbgoap/ai/Brain.cs" id="2_4r63y"]
 [ext_resource type="Script" path="res://addons/sbgoap/ai/memory/Memories.cs" id="3_oxe8n"]
 [ext_resource type="Script" path="res://addons/sbgoap/ai/memory/ExpirableMemoryNode.cs" id="4_1k8iy"]
 [ext_resource type="Script" path="res://addons/sbgoap/ai/sensor/Sensors.cs" id="4_x0up5"]
+[ext_resource type="Script" path="res://addons/sbgoap/ai/memory/MemoryNode.cs" id="5_dagjb"]
 [ext_resource type="Script" path="res://addons/sbgoap/ai/behavior/Behaviors.cs" id="5_nn2d4"]
 [ext_resource type="Script" path="res://addons/sbgoap/ai/schedule/Schedules.cs" id="6_p7lkb"]
 
@@ -69,6 +70,9 @@ TimeToLive = 2147483647
 [node name="ExpirableMemoryNode1" type="Node" parent="CharacterBody3D/Brain/Memories"]
 script = ExtResource("4_1k8iy")
 TimeToLive = 2147483647
+
+[node name="MemoryNode" type="Node" parent="CharacterBody3D/Brain/Memories"]
+script = ExtResource("5_dagjb")
 
 [node name="Sensors" type="Node" parent="CharacterBody3D/Brain"]
 script = ExtResource("4_x0up5")

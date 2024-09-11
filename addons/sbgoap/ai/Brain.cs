@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using Godot;
 using project1.addons.sbgoap.ai.behavior;
 using project1.addons.sbgoap.ai.memory;

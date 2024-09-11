@@ -1,22 +1,25 @@
-﻿using Godot;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using Godot;
 
 namespace project1.addons.sbgoap.ai.memory;
 
 [Tool]
 public partial class Memories : Node
 {
-    public readonly Godot.Collections.Dictionary<string, MemoryNode> Content = new();
+    private readonly Godot.Collections.Dictionary<string, MemoryNode> _content = new();
+    public ReadOnlyDictionary<string, MemoryNode> Content => _content.AsReadOnly();
     
     public Memories()
     {
         ChildEnteredTree += node =>
         {
-            if (node is MemoryNode memory) Content[memory.Name] = memory;
+            if (node is MemoryNode memory) _content[memory.Name] = memory;
         };
         
         ChildExitingTree += node =>
         {
-            if (node is MemoryNode memory) Content.Remove(memory.Name);
+            if (node is MemoryNode memory) _content.Remove(memory.Name);
         };
     }
     
@@ -28,7 +31,7 @@ public partial class Memories : Node
     
     public void ClearMemories()
     {
-        foreach (var node in Content.Values)
+        foreach (var node in _content.Values)
         {
             node.Value = null;
         }
@@ -41,7 +44,7 @@ public partial class Memories : Node
     
     public void EraseMemory(string memoryName)
     {
-        if (Content.TryGetValue(memoryName, out var memory))
+        if (_content.TryGetValue(memoryName, out var memory))
         {
             memory.Value = null;
             return;
@@ -52,7 +55,7 @@ public partial class Memories : Node
 
     public void SetMemory(string memoryName, GodotObject? value)
     {
-        if (Content.TryGetValue(memoryName, out var memory))
+        if (_content.TryGetValue(memoryName, out var memory))
         {
             memory.Value = value;
             return;
@@ -63,7 +66,7 @@ public partial class Memories : Node
 
     public GodotObject? GetMemory(string memoryName)
     {
-        if (Content.TryGetValue(memoryName, out var value)) return value.Value;
+        if (_content.TryGetValue(memoryName, out var value)) return value.Value;
         
         GD.PushError($"Attempt to access unregistered memory: {memoryName}");
         return null;
@@ -71,7 +74,7 @@ public partial class Memories : Node
 
     public long? GetTimeUntilExpiry(string memoryName)
     {
-        var stored = Content[memoryName];
+        var stored = _content[memoryName];
         return stored is ExpirableMemoryNode { IsExpirable: true } expirable
             ? expirable.TimeToLive
             : null;
@@ -84,7 +87,7 @@ public partial class Memories : Node
 
     public bool CheckMemory(string memoryName, MemoryStatus memoryStatus)
     {
-        if (!Content.TryGetValue(memoryName, out var memory)) 
+        if (!_content.TryGetValue(memoryName, out var memory)) 
             return memoryStatus == MemoryStatus.Unregistered;
         
         return memoryStatus switch

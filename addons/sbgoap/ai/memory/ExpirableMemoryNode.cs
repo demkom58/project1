@@ -2,7 +2,6 @@
 
 namespace project1.addons.sbgoap.ai.memory;
 
-[Tool]
 [GlobalClass]
 public partial class ExpirableMemoryNode : MemoryNode
 {
@@ -14,6 +13,7 @@ public partial class ExpirableMemoryNode : MemoryNode
 
     public ExpirableMemoryNode(GodotObject? value, int timeToLive = int.MaxValue) : base(value)
     {
+        SetPhysicsProcess(true);
         TimeToLive = timeToLive;
     }
 
@@ -23,12 +23,6 @@ public partial class ExpirableMemoryNode : MemoryNode
         
         if (IsExpirable && !IsExpired) TimeToLive--;
         else if (IsExpired) Clear();
-    }
-
-    public override void _EnterTree()
-    {
-        if (GetParent() is not Memories memories) return;
-        memories.Content[ObjectType] = this;
     }
 
     public override void Clear()
