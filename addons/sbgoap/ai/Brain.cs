@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using project1.addons.sbgoap.ai.behavior;
 using project1.addons.sbgoap.ai.memory;
@@ -45,6 +47,7 @@ public partial class Brain : Node
                     Schedules = newSchedules;
                     break;
             }
+            UpdateConfigurationWarnings();
         };
         
         ChildExitingTree += node =>
@@ -67,6 +70,7 @@ public partial class Brain : Node
                     Schedules = null;
                     break;
             }
+            UpdateConfigurationWarnings();
         };
         
         // foreach (var type in memoryTypes) _memories.Add(type, new ExpirableValue<object>());
@@ -79,6 +83,26 @@ public partial class Brain : Node
         //     _memories.Add(required, new ExpirableValue<object>());
         //
         // foreach (var memoryValue in memories) memoryValue.SetMemoryInternal(this);
+    }
+
+    public override string[] _GetConfigurationWarnings()
+    {
+        IList<string> warnings = new List<string>();
+        
+        var children = GetChildren();
+        if (children.Count != 4)
+        {
+            warnings.Add("Brain must have exactly 4 children: Memories, Sensors, Behaviors, Schedules.");
+        }
+        else
+        {
+            if (children[0] is not memory.Memories) warnings.Add("First child of Brain must be a Memories node.");
+            if (children[1] is not sensor.Sensors) warnings.Add("Second child of Brain must be a Sensors node.");
+            if (children[2] is not behavior.Behaviors) warnings.Add("Third child of Brain must be a Behaviors node.");
+            if (children[3] is not schedule.Schedules) warnings.Add("Fourth child of Brain must be a Schedules node.");
+        }
+
+        return warnings.ToArray();
     }
     
     public Brain CopyWithoutBehaviors()
