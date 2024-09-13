@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://es4ntcjuirxo"]
+[gd_scene load_steps=7 format=3 uid="uid://es4ntcjuirxo"]
 
-[ext_resource type="Script" path="res://scripts/world/entity/Counter.cs" id="1_w0x5a"]
+[ext_resource type="Script" path="res://scripts/new_script.gd" id="1_tmncb"]
+[ext_resource type="Script" path="res://scripts/EventBus.cs" id="2_l8emi"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_tv403"]
 size = Vector2(20, 20)
@@ -12,6 +13,8 @@ size = Vector2(20, 20)
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_4s8lo"]
 
 [node name="Root" type="Node3D"]
+script = ExtResource("1_tmncb")
+test_script = ExtResource("2_l8emi")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("PlaneMesh_tv403")
@@ -29,23 +32,3 @@ shape = SubResource("CapsuleShape3D_bcex2")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="CharacterBody3D"]
 mesh = SubResource("CapsuleMesh_4s8lo")
-
-[node name="Counters" type="Node" parent="CharacterBody3D"]
-
-[node name="Health" type="Node" parent="CharacterBody3D/Counters"]
-script = ExtResource("1_w0x5a")
-
-[node name="Stamina" type="Node" parent="CharacterBody3D/Counters"]
-script = ExtResource("1_w0x5a")
-
-[node name="Mana" type="Node" parent="CharacterBody3D/Counters"]
-script = ExtResource("1_w0x5a")
-
-[node name="Drowsiness" type="Node" parent="CharacterBody3D/Counters"]
-script = ExtResource("1_w0x5a")
-
-[node name="Thirst" type="Node" parent="CharacterBody3D/Counters"]
-script = ExtResource("1_w0x5a")
-
-[node name="Hunger" type="Node" parent="CharacterBody3D/Counters"]
-script = ExtResource("1_w0x5a")

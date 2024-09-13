@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace project1.scripts.world.entity.ai.schedule;
+namespace project1.addons.sbgoap.ai.schedule;
 
 public class Timeline
 {
@@ -10,7 +10,7 @@ public class Timeline
 
     public ReadOnlyCollection<Keyframe> Keyframes => _keyframes.AsReadOnly();
 
-    public Timeline AddKeyframe(int timeStamp, float value)
+    public Timeline AddKeyframe(ulong timeStamp, float value)
     {
         _keyframes.Add(new Keyframe(timeStamp, value));
         SortAndDeduplicateKeyframes();
@@ -30,7 +30,7 @@ public class Timeline
         _previousIndex = 0;
     }
 
-    public float GetValueAt(int timeStamp)
+    public float GetValueAt(ulong timeStamp)
     {
         if (_keyframes.Count <= 0) return 0.0f;
 

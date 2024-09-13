@@ -1,46 +1,43 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
-using project1.scripts.world.entity.ai.behavior;
-using project1.scripts.world.entity.ai.memory;
-using project1.scripts.world.entity.ai.schedule;
-using project1.scripts.world.entity.ai.sensor;
+using Godot;
+using project1.addons.sbgoap.ai.behavior;
+using project1.addons.sbgoap.ai.memory;
+using project1.addons.sbgoap.ai.schedule;
+using project1.addons.sbgoap.ai.sensor;
 
-namespace project1.scripts.world.entity.ai;
+namespace project1.addons.sbgoap.ai;
 
-public class Brain<TOwner> where TOwner : ILivingEntity
+[Tool]
+public partial class Brain : Node
 {
-    private readonly Dictionary<Activity, HashSet<MemoryModuleType<object>>> _activityMemoriesToEraseWhenStopped = new();
-    private readonly Dictionary<Activity, HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>>> _activityRequirements = new();
-    private readonly SortedDictionary<int, Dictionary<Activity, HashSet<Behavior<TOwner>>>> _availableBehaviorsByPriority = new();
-    private readonly Dictionary<MemoryModuleType<object>, ExpirableValue<object>?> _memories = new();
-    private readonly Dictionary<SensorType<Sensor<ILivingEntity>, ILivingEntity>, Sensor<ILivingEntity>> _sensors = new();
+    private readonly Dictionary<Activity, HashSet<MemoryModuleType<object>>>
+        _activityMemoriesToEraseWhenStopped = new();
 
-    public Schedule Schedule { get; set; } = Schedules.Empty;
-    public HashSet<Activity> CoreActivities { get; set; } = new();
-    public HashSet<Activity> ActiveActivities { get; } = new();
-    public Activity DefaultActivity { get; set; } = Activities.Idle;
-    
+    private readonly Dictionary<Activity, HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>>>
+        _activityRequirements = new();
+
+    private readonly SortedDictionary<int, Dictionary<Activity, HashSet<Behavior>>> _availableBehaviorsByPriority =
+        new();
+
+    private readonly Dictionary<MemoryModuleType<object>, ExpirableValue<object>?> _memories = new();
+    private readonly HashSet<Sensor> _sensors = new();
+
     private long _lastScheduleUpdate;
 
-    public Brain(
-        ICollection<MemoryModuleType<object>> memoryTypes,
-        ICollection<SensorType<Sensor<ILivingEntity>, ILivingEntity>> sensors,
-        ICollection<MemoryValue<object>> memories)
+    public Schedule Schedule { get; set; } = GOAPRegistry.ScheduleEmpty;
+    public HashSet<Activity> CoreActivities { get; set; } = new();
+    public HashSet<Activity> ActiveActivities { get; } = new();
+    public Activity DefaultActivity { get; set; } = GOAPRegistry.ActivityIdle;
+
+    public override void _Ready()
     {
-        foreach (var type in memoryTypes) _memories.Add(type, new ExpirableValue<object>());
-
-        foreach (var sensorType in sensors) _sensors.Add(sensorType, sensorType.Create());
-
-        foreach (var sensor in _sensors.Values)
-        foreach (var required in sensor.Requires())
-            _memories.Add(required, new ExpirableValue<object>());
-
-        foreach (var memoryValue in memories) memoryValue.SetMemoryInternal(this);
+        SetProcess(!Engine.IsEditorHint());
+        SetPhysicsProcess(!Engine.IsEditorHint());
     }
-    
+
     public bool HasMemoryValue<T>(MemoryModuleType<T> memoryModuleType)
     {
         return CheckMemory(memoryModuleType, MemoryStatus.ValuePresent);
@@ -71,31 +68,25 @@ public class Brain<TOwner> where TOwner : ILivingEntity
         var key = (MemoryModuleType<object>)(object)memoryModuleType;
 
         if (!_memories.ContainsKey(key)) return;
-
-        if (value.HasValue && IsEmptyCollection(value.Value.Value!))
-            EraseMemory(memoryModuleType);
-        else
-            _memories[key] = (ExpirableValue<object>?)(object?)value;
+        _memories[key] = (ExpirableValue<object>?)(object?)value;
     }
 
     public T? GetMemory<T>(MemoryModuleType<T> memoryModuleType)
     {
         var key = (MemoryModuleType<object>)(object)memoryModuleType;
 
-        #pragma warning disable CA1854
-        if (!_memories.ContainsKey(key))
+        if (!_memories.TryGetValue(key, out var stored))
             throw new InvalidOperationException("Unregistered memory fetched: " + memoryModuleType);
-        #pragma warning restore CA1854
 
-        var stored = _memories[key];
-        return stored.HasValue ? (T?)stored.Value.Value : default;
+
+        return (T?)stored?.Value;
     }
 
     public T? GetMemoryInternal<T>(MemoryModuleType<T> memoryModuleType)
     {
         var key = (MemoryModuleType<object>)(object)memoryModuleType;
         var stored = _memories[key];
-        return stored.HasValue ? (T?)stored.Value.Value : default;
+        return (T?)stored?.Value;
     }
 
     public long GetTimeUntilExpiry<T>(MemoryModuleType<T> memoryModuleType)
@@ -114,21 +105,18 @@ public class Brain<TOwner> where TOwner : ILivingEntity
     {
         var key = (MemoryModuleType<object>)(object)memoryModuleType;
 
-        #pragma warning disable CA1854
-        if (!_memories.ContainsKey(key)) return false;
-        #pragma warning restore CA1854
+        if (!_memories.TryGetValue(key, out var memory)) return false;
 
-        var memory = _memories[key];
         return memoryStatus switch
         {
             MemoryStatus.Registered => true,
-            MemoryStatus.ValuePresent => memory.HasValue,
-            MemoryStatus.ValueAbsent => !memory.HasValue,
+            MemoryStatus.ValuePresent => memory != null,
+            MemoryStatus.ValueAbsent => memory == null,
             _ => false
         };
     }
 
-    public List<Behavior<TOwner>> GetRunningBehaviors()
+    public List<Behavior> GetRunningBehaviors()
     {
         return (
             from map in _availableBehaviorsByPriority.Values
@@ -182,7 +170,7 @@ public class Brain<TOwner> where TOwner : ILivingEntity
         if (gameTime - _lastScheduleUpdate <= 20L) return;
 
         _lastScheduleUpdate = gameTime;
-        var activity = Schedule.GetActivityAt((int)(dayTime % 24000L));
+        var activity = Schedule.GetActivityAt(SBGOAP.DayTimeProvider(this));
         if (!ActiveActivities.Contains(activity)) SetActiveActivityIfPossible(activity);
     }
 
@@ -195,7 +183,7 @@ public class Brain<TOwner> where TOwner : ILivingEntity
         }
     }
 
-    public void AddActivity(Activity activity, int priority, IEnumerable<Behavior<TOwner>> behaviors)
+    public void AddActivity(Activity activity, int priority, IEnumerable<Behavior> behaviors)
     {
         AddActivity(activity, CreatePriorityTuples(priority, behaviors));
     }
@@ -203,7 +191,7 @@ public class Brain<TOwner> where TOwner : ILivingEntity
     public void AddActivityAndRemoveMemoryWhenStopped(
         Activity activity,
         int priority,
-        IEnumerable<Behavior<TOwner>> behaviors,
+        IEnumerable<Behavior> behaviors,
         MemoryModuleType<object> memoryType)
     {
         HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>> memoriesRequirements
@@ -215,7 +203,7 @@ public class Brain<TOwner> where TOwner : ILivingEntity
             CreatePriorityTuples(priority, behaviors), memoriesRequirements, eraseOnStopMemories);
     }
 
-    public void AddActivity(Activity activity, IEnumerable<Tuple<int, Behavior<TOwner>>> behaviors)
+    public void AddActivity(Activity activity, IEnumerable<Tuple<int, Behavior>> behaviors)
     {
         AddActivityAndRemoveMemoriesWhenStopped(activity, behaviors,
             new HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>>(), new HashSet<MemoryModuleType<object>>());
@@ -223,7 +211,7 @@ public class Brain<TOwner> where TOwner : ILivingEntity
 
     public void AddActivityWithConditions(
         Activity activity,
-        IEnumerable<Tuple<int, Behavior<TOwner>>> behaviors,
+        IEnumerable<Tuple<int, Behavior>> behaviors,
         HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>> set)
     {
         AddActivityAndRemoveMemoriesWhenStopped(activity, behaviors, set, new HashSet<MemoryModuleType<object>>());
@@ -231,7 +219,7 @@ public class Brain<TOwner> where TOwner : ILivingEntity
 
     public void AddActivityAndRemoveMemoriesWhenStopped(
         Activity act,
-        IEnumerable<Tuple<int, Behavior<TOwner>>> behaviors,
+        IEnumerable<Tuple<int, Behavior>> behaviors,
         HashSet<Tuple<MemoryModuleType<object>, MemoryStatus>> memoriesRequirements,
         HashSet<MemoryModuleType<object>> eraseOnStopMemories)
     {
@@ -242,14 +230,14 @@ public class Brain<TOwner> where TOwner : ILivingEntity
             var activity2Behs = _availableBehaviorsByPriority[tuple.Item1];
             if (activity2Behs == null)
             {
-                activity2Behs = new Dictionary<Activity, HashSet<Behavior<TOwner>>>();
+                activity2Behs = new Dictionary<Activity, HashSet<Behavior>>();
                 _availableBehaviorsByPriority[tuple.Item1] = activity2Behs;
             }
 
             var behs = activity2Behs[act];
             if (behs == null)
             {
-                behs = new HashSet<Behavior<TOwner>>();
+                behs = new HashSet<Behavior>();
                 activity2Behs[act] = behs;
             }
 
@@ -267,64 +255,53 @@ public class Brain<TOwner> where TOwner : ILivingEntity
         return ActiveActivities.Contains(activity);
     }
 
-    public Brain<TOwner> CopyWithoutBehaviors()
-    {
-        var brain = new Brain<TOwner>(_memories.Keys, _sensors.Keys, ImmutableList<MemoryValue<object>>.Empty);
-        foreach (var (memoryModuleType, value) in _memories)
-        {
-            if (value.HasValue) brain._memories[memoryModuleType] = value;
-        }
-
-        return brain;
-    }
-
-    public void Update(IWorld world, TOwner owner)
+    public override void _PhysicsProcess(double delta)
     {
         ForgetOutdatedMemories();
-        UpdateSensors(world, owner);
-        StartEachNonRunningBehavior(world, owner);
-        UpdateEachRunningBehavior(world, owner);
+        UpdateSensors();
+        StartEachNonRunningBehavior();
+        UpdateEachRunningBehavior();
     }
 
-    private void UpdateSensors(IWorld world, TOwner owner)
+    private void UpdateSensors()
     {
-        foreach (var sensor in _sensors.Values) sensor.Update(world, owner);
+        foreach (var sensor in _sensors) sensor.Update(this);
     }
 
     private void ForgetOutdatedMemories()
     {
         foreach (var (key, expirableValue) in _memories)
         {
-            if (!expirableValue.HasValue) continue;
-            
-            if (expirableValue.Value.IsExpired) EraseMemory(key);
-            else expirableValue.Value.Update();
+            if (expirableValue == null) continue;
+
+            if (expirableValue.IsExpired) EraseMemory(key);
+            else expirableValue.Update();
         }
     }
 
-    public void StopAll(IWorld world, TOwner owner)
+    public void StopAll()
     {
-        var gameTime = owner.World.GameTime;
-        foreach (var behavior in GetRunningBehaviors()) behavior.DoStop(world, owner, gameTime);
+        var gameTime = SBGOAP.GameTimeProvider(this);
+        foreach (var behavior in GetRunningBehaviors()) behavior.DoStop(this, gameTime);
     }
 
-    private void StartEachNonRunningBehavior(IWorld world, TOwner owner)
+    private void StartEachNonRunningBehavior()
     {
-        var gameTime = world.GameTime;
+        var gameTime = SBGOAP.GameTimeProvider(this);
         foreach (var actBehs in _availableBehaviorsByPriority.Values)
         foreach (var (activity, behaviors) in actBehs)
         {
             if (ActiveActivities.Contains(activity)) continue;
 
             foreach (var behavior in behaviors.Where(behavior => behavior.Status == BehaviorStatus.Stopped))
-                behavior.TryStart(world, owner, gameTime);
+                behavior.TryStart(this, gameTime);
         }
     }
 
-    private void UpdateEachRunningBehavior(IWorld world, TOwner owner)
+    private void UpdateEachRunningBehavior()
     {
-        var gameTime = world.GameTime;
-        foreach (var behavior in GetRunningBehaviors()) behavior.UpdateOrStop(world, owner, gameTime);
+        var gameTime = SBGOAP.GameTimeProvider(this);
+        foreach (var behavior in GetRunningBehaviors()) behavior.UpdateOrStop(this, gameTime);
     }
 
     private bool ActivityRequirementsAreMet(Activity activity)
@@ -342,17 +319,11 @@ public class Brain<TOwner> where TOwner : ILivingEntity
         return obj is ICollection { Count: 0 };
     }
 
-    private static List<Tuple<int, Behavior<TOwner>>> CreatePriorityTuples(
-        int priority, 
-        IEnumerable<Behavior<TOwner>> behaviors)
+    private static List<Tuple<int, Behavior>> CreatePriorityTuples(
+        int priority,
+        IEnumerable<Behavior> behaviors)
     {
         var priorityCounter = priority;
-        return behaviors.Select(behavior => new Tuple<int, Behavior<TOwner>>(priorityCounter++, behavior)).ToList();
-    }
-
-
-    public readonly record struct MemoryValue<TU>(MemoryModuleType<TU> Type, ExpirableValue<TU>? Value)
-    {
-        public void SetMemoryInternal(Brain<TOwner> brain) => brain.SetMemoryInternal(Type, Value);
+        return behaviors.Select(behavior => new Tuple<int, Behavior>(priorityCounter++, behavior)).ToList();
     }
 }

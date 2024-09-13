@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace project1.scripts.world.entity.ai.schedule;
+namespace project1.addons.sbgoap.ai.schedule;
 
 public class Schedule
 {
@@ -29,7 +29,7 @@ public class Schedule
             => entry.Key.Equals(activity)).Select(entry => entry.Value).ToList();
     }
 
-    public Activity GetActivityAt(int timeStamp)
+    public Activity GetActivityAt(ulong timeStamp)
     {
         return _timelines.Aggregate((l, r)
             => l.Value.GetValueAt(timeStamp) > r.Value.GetValueAt(timeStamp) ? l : r).Key;
@@ -45,7 +45,7 @@ public class Schedule
             _name = name;
         }
 
-        public Builder ChangeActivityAt(int i, Activity activity)
+        public Builder ChangeActivityAt(uint i, Activity activity)
         {
             _transitions.Add(new ActivityTransition(i, activity));
             return this;
@@ -72,10 +72,10 @@ public class Schedule
 
         private struct ActivityTransition
         {
-            public readonly int Time;
+            public readonly uint Time;
             public readonly Activity Activity;
 
-            public ActivityTransition(int time, Activity activity)
+            public ActivityTransition(uint time, Activity activity)
             {
                 Time = time;
                 Activity = activity;
