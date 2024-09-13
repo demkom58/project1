@@ -82,3 +82,13 @@ script = ExtResource("5_nn2d4")
 
 [node name="Schedules" type="Node" parent="CharacterBody3D/Brain"]
 script = ExtResource("6_p7lkb")
+
+[node name="Activity1" type="Node" parent="CharacterBody3D/Brain/Schedules"]
+
+[node name="Activity2" type="Node" parent="CharacterBody3D/Brain/Schedules"]
+
+[node name="Activity3" type="Node" parent="CharacterBody3D/Brain/Schedules"]
+
+[node name="Activity4" type="Node" parent="CharacterBody3D/Brain/Schedules"]
+
+[node name="Activity5" type="Node" parent="CharacterBody3D/Brain/Schedules"]

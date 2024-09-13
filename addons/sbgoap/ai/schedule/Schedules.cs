@@ -17,6 +17,7 @@ public partial class Schedules : Node
     private readonly SortedDictionary<int, Dictionary<Activity, HashSet<Behavior>>> _availableBehaviorsByPriority = new();
     
     private HashSet<Activity> _coreActivities = new();
+    [Export]
     public HashSet<Activity> CoreActivities
     {
         get => _coreActivities;
@@ -28,6 +29,7 @@ public partial class Schedules : Node
     }
     public Schedule Schedule { get; set; } = Schedules.Empty;
     public HashSet<Activity> ActiveActivities { get; } = new();
+    [Export]
     public Activity DefaultActivity { get; set; } = Activities.Idle;
     
     private long _lastScheduleUpdate;
@@ -208,5 +210,24 @@ public partial class Schedules : Node
     {
         var priorityCounter = priority;
         return behaviors.Select(behavior => new Tuple<int, Behavior>(priorityCounter++, behavior)).ToList();
+    }
+    
+    private void StartEachNonRunningBehavior()
+    {
+        var gameTime = world.GameTime;
+        foreach (var actBehs in _availableBehaviorsByPriority.Values)
+        foreach (var (activity, behaviors) in actBehs)
+        {
+             if (ActiveActivities.Contains(activity)) continue;
+       
+            foreach (var behavior in behaviors.Where(behavior => behavior.Status == BehaviorStatus.Stopped))
+                behavior.TryStart(gameTime);
+        }
+    }
+
+    private void UpdateEachRunningBehavior()
+    {
+        var gameTime = world.GameTime;
+        foreach (var behavior in GetRunningBehaviors()) behavior.UpdateOrStop(gameTime);
     }
 }

@@ -136,23 +136,4 @@ public partial class Brain : Node
         // foreach (var behavior in GetRunningBehaviors()) behavior.DoStop(gameTime);
     }
 
-    private void StartEachNonRunningBehavior()
-    {
-        // var gameTime = world.GameTime;
-        // foreach (var actBehs in _availableBehaviorsByPriority.Values)
-        // foreach (var (activity, behaviors) in actBehs)
-        // {
-        //     if (ActiveActivities.Contains(activity)) continue;
-        //
-        //     foreach (var behavior in behaviors.Where(behavior => behavior.Status == BehaviorStatus.Stopped))
-        //         behavior.TryStart(gameTime);
-        // }
-    }
-
-    private void UpdateEachRunningBehavior()
-    {
-        // var gameTime = world.GameTime;
-        // foreach (var behavior in GetRunningBehaviors()) behavior.UpdateOrStop(gameTime);
-    }
-
 }

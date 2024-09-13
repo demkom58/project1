@@ -1,22 +1,8 @@
-﻿namespace project1.addons.sbgoap.ai.schedule;
+﻿using Godot;
 
-public class Activity
+namespace project1.addons.sbgoap.ai.schedule;
+
+public partial class Activity : Node
 {
-    public readonly string Name;
 
-    public Activity(string name)
-    {
-        Name = name;
-    }
-
-    public override int GetHashCode()
-    {
-        return Name.GetHashCode();
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj is Activity activity) return Name.Equals(activity.Name);
-        return false;
-    }
 }
